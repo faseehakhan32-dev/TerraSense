@@ -59,195 +59,136 @@ Each node:
 7. The system generates a risk level.
 8. Local and remote alerts are triggered when required.
 
-## 🏗️ Core Architecture
+# 🏗️ Core Architecture
 
-TerraSense follows a distributed, edge-based architecture designed to monitor multiple environmental hazards using specialized sensor nodes and a common communication, processing, risk-assessment, and alert framework.
+TerraSense is designed as a **distributed, modular, and offline-capable environmental early-warning platform**.
 
-The **current working prototype focuses on landslide monitoring**, while the same architecture is designed to support **flood, forest fire, and environmental pollution** monitoring.
+The system consists of specialized sensor nodes for different hazards, local edge processing, 433 MHz LoRa communication, an ESP32 gateway, intelligent risk assessment, and a multi-level alert system.
+
+> **Current working focus:** Landslide Early Warning  
+> **Future expansion:** Flood • Forest Fire • Environmental Pollution
+
+---
+
+## 🔄 End-to-End Architecture
 
 ```mermaid
 flowchart TB
 
-    %% =========================
-    %% HAZARD SENSOR NODES
-    %% =========================
+    ENV["🌍 ENVIRONMENTAL CONDITIONS"]
 
-    subgraph NODES["🌍 HAZARD-SPECIFIC SENSOR NODES"]
+    subgraph NODES["📡 01 — DISTRIBUTED SENSOR NODES"]
 
         L["🌍 LANDSLIDE NODE<br/><br/>
+        ESP32<br/>
         MPU6050<br/>
         Soil Moisture<br/>
         Rain Sensor<br/>
-        HX711 + Load Cell<br/>
-        ESP32"]
+        HX711 + Load Cell"]
 
         F["🌊 FLOOD NODE<br/><br/>
+        ESP32<br/>
         Water Level<br/>
-        Rain Sensor<br/>
+        Rain<br/>
         Temperature<br/>
-        Humidity<br/>
-        ESP32"]
+        Humidity"]
 
-        FF["🔥 FOREST FIRE NODE<br/><br/>
+        FIRE["🔥 FOREST FIRE NODE<br/><br/>
+        ESP32<br/>
         Temperature<br/>
         Humidity<br/>
         Smoke / PM<br/>
-        Gas / VOC<br/>
-        ESP32"]
+        Gas / VOC"]
 
-        P["🏭 POLLUTION NODE<br/><br/>
+        POL["🏭 POLLUTION NODE<br/><br/>
+        ESP32<br/>
         PM2.5 / PM10<br/>
-        CO / Gas<br/>
-        VOC<br/>
+        CO / VOC<br/>
         NO₂ / SO₂<br/>
-        Temperature / Humidity<br/>
-        ESP32"]
+        Temperature / Humidity"]
     end
 
-    %% =========================
-    %% EDGE PROCESSING
-    %% =========================
+    subgraph EDGE["⚙️ 02 — EDGE PROCESSING"]
 
-    subgraph EDGE["⚙️ EDGE PROCESSING — SENSOR NODE"]
+        ACQ["Sensor Data Acquisition"]
+        VALID["Data Validation"]
+        FILTER["Noise Filtering"]
+        FEATURE["Feature Extraction"]
+        TREND["Trend & Rate-of-Change Analysis"]
 
-        E1["Sensor Data Acquisition"]
-        E2["Data Validation"]
-        E3["Noise Filtering"]
-        E4["Feature Extraction"]
-        E5["Trend & Rate-of-Change Analysis"]
-
-        E1 --> E2 --> E3 --> E4 --> E5
+        ACQ --> VALID --> FILTER --> FEATURE --> TREND
     end
 
-    %% =========================
-    %% COMMUNICATION
-    %% =========================
-
-    subgraph COMM["📡 COMMUNICATION LAYER"]
+    subgraph COMM["📡 03 — COMMUNICATION"]
 
         LORA["SX1278 / RA-02<br/>
         433 MHz LoRa<br/><br/>
-        Low Power • Long Range • Offline Communication"]
+        Low Power • Long Range • Offline"]
     end
 
-    %% =========================
-    %% GATEWAY
-    %% =========================
+    subgraph GW["🖥️ 04 — ESP32 GATEWAY"]
 
-    subgraph GATEWAY["🖥️ ESP32 GATEWAY"]
+        RX["LoRa Packet Reception"]
+        PARSE["Packet Parsing"]
+        AGG["Multi-Node Aggregation"]
+        PROC["Hazard-Specific Processing"]
 
-        G1["LoRa Packet Reception"]
-        G2["Data Parsing & Validation"]
-        G3["Multi-Node Data Aggregation"]
-        G4["Hazard-Specific Processing"]
-
-        G1 --> G2 --> G3 --> G4
+        RX --> PARSE --> AGG --> PROC
     end
 
-    %% =========================
-    %% RISK ENGINE
-    %% =========================
+    subgraph INTEL["🧠 05 — INTELLIGENT RISK ASSESSMENT"]
 
-    subgraph RISK["🧠 INTELLIGENT RISK ASSESSMENT"]
+        FUSION["Multi-Sensor Risk Fusion"]
+        SCORE["Risk Score"]
+        ML["ML-Based Risk Prediction<br/>(Development Stage)"]
 
-        R1["Multi-Sensor Risk Fusion"]
-        R2["Risk Score"]
-        R3["ML-Based Risk Prediction<br/>(Development Stage)"]
-
-        R1 --> R2
-        R3 --> R2
+        FUSION --> SCORE
+        ML --> SCORE
     end
 
-    %% =========================
-    %% DECISION
-    %% =========================
-
-    subgraph DECISION["🚦 RISK DECISION"]
+    subgraph DECISION["🚦 06 — DECISION LAYER"]
 
         SAFE["🟢 SAFE<br/>Normal Conditions"]
-        WARNING["🟡 WARNING<br/>Increasing / Potential Risk"]
+        WARN["🟡 WARNING<br/>Increasing / Potential Risk"]
         DANGER["🔴 DANGER<br/>High Risk"]
     end
 
-    %% =========================
-    %% RESPONSE
-    %% =========================
+    subgraph RESPONSE["🚨 07 — RESPONSE LAYER"]
 
-    subgraph RESPONSE["🚨 RESPONSE & MONITORING"]
+        LOCAL["Local Alerts<br/><br/>
+        LED • Buzzer • Voice"]
 
-        LOCAL["🔊 LOCAL ALERTS<br/><br/>
-        LED Indicators<br/>
-        Buzzer / Siren<br/>
-        Voice Alert"]
+        DASH["Local Dashboard<br/><br/>
+        Sensor Data • Trends<br/>
+        Risk Status • Node Health"]
 
-        DASH["📊 LOCAL DASHBOARD<br/><br/>
-        Sensor Readings<br/>
-        Trends<br/>
-        Risk Status<br/>
-        Node Monitoring"]
-
-        REMOTE["🌐 OPTIONAL REMOTE SERVICES<br/><br/>
-        Notifications<br/>
-        Authority Alerts<br/>
-        Historical Analytics<br/>
-        Cloud Services"]
+        REMOTE["Optional Remote Services<br/><br/>
+        Notifications • Authority Alerts<br/>
+        Historical Analytics"]
     end
 
-    %% =========================
-    %% CONNECTIONS
-    %% =========================
+    ENV --> L
+    ENV --> F
+    ENV --> FIRE
+    ENV --> POL
 
-    L --> E1
-    F --> E1
-    FF --> E1
-    P --> E1
+    L --> ACQ
+    F --> ACQ
+    FIRE --> ACQ
+    POL --> ACQ
 
-    E5 --> LORA
-    LORA --> G1
+    TREND --> LORA
+    LORA --> RX
 
-    G4 --> R1
+    PROC --> FUSION
 
-    R2 --> SAFE
-    R2 --> WARNING
-    R2 --> DANGER
+    SCORE --> SAFE
+    SCORE --> WARN
+    SCORE --> DANGER
 
     SAFE --> LOCAL
-    WARNING --> LOCAL
+    WARN --> LOCAL
     DANGER --> LOCAL
 
-    R2 --> DASH
-    DASH -.-> REMOTE
-
-    %% =========================
-    %% STYLING
-    %% =========================
-
-    classDef landslide fill:#EDE9FE,stroke:#7C3AED,stroke-width:2px,color:#111827
-    classDef flood fill:#DBEAFE,stroke:#2563EB,stroke-width:2px,color:#111827
-    classDef fire fill:#FEE2E2,stroke:#DC2626,stroke-width:2px,color:#111827
-    classDef pollution fill:#D1FAE5,stroke:#059669,stroke-width:2px,color:#111827
-
-    classDef processing fill:#F8FAFC,stroke:#475569,stroke-width:2px,color:#111827
-    classDef communication fill:#E0F2FE,stroke:#0284C7,stroke-width:2px,color:#111827
-    classDef gateway fill:#E0E7FF,stroke:#4F46E5,stroke-width:2px,color:#111827
-    classDef risk fill:#F3E8FF,stroke:#9333EA,stroke-width:2px,color:#111827
-    classDef safe fill:#DCFCE7,stroke:#16A34A,stroke-width:2px,color:#111827
-    classDef warning fill:#FEF3C7,stroke:#D97706,stroke-width:2px,color:#111827
-    classDef danger fill:#FEE2E2,stroke:#DC2626,stroke-width:2px,color:#111827
-    classDef response fill:#ECFEFF,stroke:#0891B2,stroke-width:2px,color:#111827
-
-    class L landslide
-    class F flood
-    class FF fire
-    class P pollution
-
-    class E1,E2,E3,E4,E5 processing
-    class LORA communication
-    class G1,G2,G3,G4 gateway
-    class R1,R2,R3 risk
-
-    class SAFE safe
-    class WARNING warning
-    class DANGER danger
-
-    class LOCAL,DASH,REMOTE response
+    SCORE --> DASH
+    DASH -. Optional Connectivity .-> REMOTE
