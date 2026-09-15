@@ -59,6 +59,13 @@ Each node:
 7. The system generates a risk level.
 8. Local and remote alerts are triggered when required.
 
+## 🏗️ Core Architecture
+
+TerraSense follows a distributed, edge-based architecture designed to monitor multiple environmental hazards using specialized sensor nodes and a common communication, processing, risk-assessment, and alert framework.
+
+The **current working prototype focuses on landslide monitoring**, while the same architecture is designed to support **flood, forest fire, and environmental pollution** monitoring.
+
+```mermaid
 flowchart TB
 
     %% =========================
